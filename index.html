@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jardines Integra Los Ríos</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#5587D4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Integra Los Ríos">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+
+/* =============================================
+   VARIABLES Y TEMA
+   ============================================= */
+:root {
+  --bg:      #ECE8E0;
+  --card:    #fff;
+  --text:    #333;
+  --accent:  #5587D4;
+  --btn:     #5587D4;
+  --purple:  #B075AE;
+  --pink:    #EB79A7;
+  --green:   #4DB38B;
+  --orange:  #FFA455;
+}
+body.dark {
+  --bg:    #000;
+  --card:  #1a1a1a;
+  --text:  #eaeaea;
+  --accent:#FFA455;
+  --btn:   #FFA455;
+}
+
+/* =============================================
+   BASE
+   ============================================= */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* =============================================
+   BANNER SUPERIOR — 100% responsive sin franjas
+   La imagen siempre llena el espacio con cover.
+   ============================================= */
+.topbanner {
+  width: 100%;
+  overflow: hidden;
+  background: #111;
+}
+
+.topbanner img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* =============================================
+   MENÚ DE COMUNAS
+   ============================================= */
+.topmenu {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 12px;
+  margin-top: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.3);
+  backdrop-filter: blur(12px);
+}
+.topmenu button {
+  background: var(--accent);
+  color: white;
+  border: 3px solid transparent;
+  padding: 12px 22px;
+  border-radius: 22px;
+  font-weight: bold;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: .35s;
+}
+body:not(.dark) .topmenu button:hover { background: var(--pink); }
+body.dark       .topmenu button:hover { background: var(--green); color: #000; }
+.topmenu button.active                { background: var(--purple); border-color: var(--pink); }
+body.dark .topmenu button.active      { background: var(--orange); border-color: var(--pink); color: #000; }
+
+@media (max-width: 600px) {
+  .topmenu         { padding: 8px 6px; }
+  .topmenu button  { padding: 10px 14px; font-size: 14px; border-radius: 18px; }
+}
+
+/* =============================================
+   GRILLA DE TARJETAS
+   ============================================= */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 16px;
+}
+.card {
+  background: var(--card);
+  padding: 16px;
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.12);
+  border-left: 6px solid var(--accent);
+  animation: fadeZoom .6s ease forwards;
+  overflow: hidden;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+@keyframes fadeZoom {
+  from { opacity: 0; transform: scale(.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.card h3 { font-size: 18px; margin: 0; }
+
+/* Tabla interna de datos: 2 columnas (label | valor) */
+.card-info {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.card-info .lbl {
+  font-weight: bold;
+  white-space: nowrap;
+  color: var(--text);
+}
+.card-info .val {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Badge tardes */
+.badge-program {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 13px;
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  white-space: normal;
+  word-break: break-word;
+}
+
+@media (max-width: 600px) {
+  .grid { padding: 10px; gap: 10px; }
+  .card { padding: 13px; }
+  .card h3 { font-size: 14px; }
+  .card-info { font-size: 12px; }
+}
+
+/* =============================================
+   BOTÓN GOOGLE MAPS
+   ============================================= */
+.btn {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 8px 18px;
+  border-radius: 16px;
+  font-size: 14px;
+  background: var(--btn);
+  color: white;
+  text-decoration: none;
+  transition: .3s;
+}
+body:not(.dark) .btn:hover { background: #5587D4; }
+body.dark       .btn:hover { background: #FFA455; color: #000; }
+
+/* Tooltip flotante global — posicionado por JS, no atrapado en .card */
+#tip-box {
+  display: none;
+  position: fixed;
+  z-index: 99998;
+  max-width: 280px;
+  background: rgba(20,20,20,.95);
+  color: #fff;
+  padding: 11px 14px;
+  border-radius: 11px;
+  font-size: 12px;
+  line-height: 1.55;
+  box-shadow: 0 6px 20px rgba(0,0,0,.4);
+  pointer-events: none;
+  white-space: normal;
+}
+#tip-box.visible { display: block; }
+
+/* =============================================
+   BANNER DE INSTALACIÓN PWA
+   ============================================= */
+#pwa-banner {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 99999;
+  background: var(--card);
+  border-top: 3px solid var(--accent);
+  box-shadow: 0 -4px 20px rgba(0,0,0,.25);
+  padding: 14px 16px;
+  align-items: center;
+  gap: 12px;
+  animation: slideUp .4s ease;
+}
+#pwa-banner.show { display: flex; }
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+#pwa-banner img  { width: 48px; height: 48px; border-radius: 10px; flex-shrink: 0; }
+#pwa-banner .pwa-text { flex: 1; }
+#pwa-banner .pwa-text strong { display: block; font-size: 15px; margin-bottom: 2px; }
+#pwa-banner .pwa-text span   { font-size: 12px; opacity: .75; }
+#pwa-banner .pwa-install {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 13px;
+}
+#pwa-banner .pwa-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--text);
+  padding: 4px 6px;
+  flex-shrink: 0;
+}
+/* iOS: instrucción especial */
+#pwa-ios-hint {
+  display: none;
+  position: fixed;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  background: rgba(0,0,0,.88);
+  color: #fff;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-size: 13px;
+  text-align: center;
+  max-width: 280px;
+  line-height: 1.5;
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+}
+#pwa-ios-hint::after {
+  content: "";
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 8px solid transparent;
+  border-bottom: 0;
+  border-top-color: rgba(0,0,0,.88);
+}
+#pwa-ios-hint.show { display: block; }
+.info-icon {
+  position: fixed;
+  bottom: 12px;
+  right: 14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.35);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  color: var(--text);
+  cursor: pointer;
+  z-index: 10000;
+  border: 1px solid rgba(255,255,255,.4);
+}
+body.dark .info-icon { background: rgba(255,255,255,.35); }
+
+.info-icon .tooltip {
+  position: absolute;
+  bottom: 38px;
+  right: 0;
+  padding: 10px 14px;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(12px);
+  border-radius: 10px;
+  font-size: 12px;
+  border: 1px solid rgba(0,0,0,0.45);
+  white-space: nowrap;
+  color: var(--text);
+  min-width: 180px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px) scale(.96);
+  transition: opacity .35s ease, transform .45s cubic-bezier(.22,1,.36,1);
+}
+body.dark .info-icon .tooltip { background: rgba(0,0,0,0.45); }
+
+.info-icon.active .tooltip {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.tooltip-title { font-weight: bold; margin-bottom: 2px; }
+.tooltip-year  { font-size: 11px; opacity: .8; margin-bottom: 6px; }
+.tooltip-ig {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--accent);
+  font-weight: bold;
+  line-height: 1.6;
+}
+.tooltip-igeoin {
+  display: block;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: var(--accent);
+  font-weight: bold;
+  line-height: 1.6;
+}  
+.tooltip-ig svg { width: 20px; height: 20px; min-width: 20px; }
+
+@media (max-width: 600px) {
+  .info-icon .tooltip { max-width: 90vw; }
+  .tooltip-ig         { gap: 10px; font-size: 14px; }
+  .tooltip-igeoin     { gap: 10px; font-size: 14px; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- =============================================
+     BANNER — JS detecta dimensiones reales de la
+     imagen y aplica su proporción exacta en escritorio.
+     En tablet/móvil CSS recorta centrado con cover.
+     ============================================= -->
+<div class="topbanner" id="banner">
+  <img src="banner.png" alt="Banner Integra Región de Los Ríos" id="bannerImg">
+</div>
+
+<!-- =============================================
+     MENÚ COMUNAS (generado por JS)
+     ============================================= -->
+<div class="topmenu" id="topmenu"></div>
+
+<!-- =============================================
+     GRILLA DE JARDINES (generada por JS)
+     ============================================= -->
+<div class="grid" id="grid"></div>
+
+<!-- Tooltip flotante global (no queda atrapado en .card) -->
+<div id="tip-box"></div>
+
+<!-- =============================================
+     BANNER PWA — instalación en Android / iOS
+     ============================================= -->
+<div id="pwa-banner">
+  <img src="icon-192.png" alt="Icono app">
+  <div class="pwa-text">
+    <strong>Instalar App</strong>
+    <span>Jardines Integra Los Ríos</span>
+  </div>
+  <button class="pwa-install" id="pwa-install-btn">Instalar</button>
+  <button class="pwa-close"   id="pwa-close-btn">✕</button>
+</div>
+
+<!-- Hint para iOS (no tiene prompt nativo) -->
+<div id="pwa-ios-hint" role="tooltip">
+  Toca <strong>Compartir</strong> (□↑) y luego<br>
+  <strong>«Agregar a pantalla de inicio»</strong>
+</div>
+
+<!-- =============================================
+     ÍCONO INFO / CRÉDITOS
+     ============================================= -->
+<div class="info-icon" id="infoIcon" tabindex="0" aria-expanded="false">ℹ️
+  <div class="tooltip">
+    <div class="tooltip-title">Creado por: Julio Alveal Tejos</div>
+    <div class="tooltip-year">2026</div>
+    <a class="tooltip-ig"
+       href="https://www.instagram.com/integra_losrios?igsh=MTFnd3Yzam0wc3Awaw=="
+       target="_blank">
+      <svg viewBox="0 0 24 24" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor">
+        <path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2Zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5A4.25 4.25 0 0 0 7.75 20.5h8.5a4.25 4.25 0 0 0 4.25-4.25v-8.5A4.25 4.25 0 0 0 16.25 3.5h-8.5ZM12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 1.5a3.5 3.5 0 1 0 0 7 3.5 3.5 0 0 0 0-7Zm5.25-1.75a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5Z"/>
+      </svg>
+      <span>@integra_losrios</span>
+    </a>
+        <a class="tooltip-igeoin"
+       href="https://geobuscador.integra.cl/"
+       target="_blank">
+      <span>📍Geobuscador.integra</span>
+    </a>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   ██████╗  █████╗ ████████╗ ██████╗ ███████╗
+   ██╔══██╗██╔══██╗╚══██╔══╝██╔═══██╗██╔════╝
+   ██║  ██║███████║   ██║   ██║   ██║███████╗
+   ██║  ██║██╔══██║   ██║   ██║   ██║╚════██║
+   ██████╔╝██║  ██║   ██║   ╚██████╔╝███████║
+   ╚═════╝ ╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚══════╝
+
+   ✏️  PARA EDITAR UN JARDÍN busca su nombre en la lista
+       y modifica los campos correspondientes:
+         nombre      → Nombre del jardín
+         comuna      → Comuna (debe coincidir con el filtro)
+         direccion   → Dirección completa
+         jornada     → Hora de inicio de jornada
+         correo      → Correo institucional
+         fono        → Teléfono fijo (o "No tiene")
+         celular     → Celular institucional
+         tardes      → true = "Con Tardes de Juego"  /  false = "Sin Tardes de Juego"
+         maps        → Enlace Google Maps (coordenadas)
+   ============================================================ */
+
+const JARDINES = [
+
+  /* ─── VALDIVIA ─────────────────────────────────────────── */
+  {
+    nombre:    "El Canelito",
+    comuna:    "Valdivia",
+    direccion: "René Schneider #3210",
+    jornada:   "08:30",
+    correo:    "16.elcanelito@fundacion.integra.cl",
+    fono:      "442865477",
+    celular:   "939225342",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.84273497286754,-73.21693456748824"
+  },
+  {
+    nombre:    "Cuncunita",
+    comuna:    "Valdivia",
+    direccion: "Balmaceda #5571 Pobl. Collico",
+    jornada:   "08:30",
+    correo:    "16.cuncunita@fundacion.integra.cl",
+    fono:      "443561614",
+    celular:   "939244138",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.80377064546047,-73.2089080336706"
+  },
+  {
+    nombre:    "Esperanza",
+    comuna:    "Valdivia",
+    direccion: "Arica #2315 con General Lagos",
+    jornada:   "08:30",
+    correo:    "16.esperanza@fundacion.integra.cl",
+    fono:      "443561626",
+    celular:   "939225345",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.83495914304212,-73.25620091489277"
+  },
+  {
+    nombre:    "Papelucho",
+    comuna:    "Valdivia",
+    direccion: "Bombero Córdova #248, Sector Las Animas",
+    jornada:   "08:30",
+    correo:    "16.papelucho@fundacion.integra.cl",
+    fono:      "443578164",
+    celular:   "939225328",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.81424785013783,-73.22537407541412"
+  },
+  {
+    nombre:    "Ensueño",
+    comuna:    "Valdivia",
+    direccion: "Arturo Godoy #3090 Pobl. Yañez Zavala",
+    jornada:   "08:30",
+    correo:    "16.ensueno@fundacion.integra.cl",
+    fono:      "443578165",
+    celular:   "939225346",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.84414187955394,-73.22834071255748"
+  },
+  {
+    nombre:    "Los Pinguinitos",
+    comuna:    "Valdivia",
+    direccion: "Las Encinas #230, Sector Isla Teja",
+    jornada:   "08:00",
+    correo:    "16.lospinguinitos@fundacion.integra.cl",
+    fono:      "442852366",
+    celular:   "939225322",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.80950032451909,-73.25326488570953"
+  },
+  {
+    nombre:    "Amanecer del Sol",
+    comuna:    "Valdivia",
+    direccion: "Santa Hortensia #750, Pobl. San Pedro",
+    jornada:   "08:30",
+    correo:    "16.amanecerdelsol@fundacion.integra.cl",
+    fono:      "443578166",
+    celular:   "939225323",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.85028841951018,-73.22424813394893"
+  },
+  {
+    nombre:    "Más Amigos",
+    comuna:    "Valdivia",
+    direccion: "Iquique #450 Villa Norte Grande, Sector Las Animas",
+    jornada:   "08:30",
+    correo:    "16.masamigos@fundacion.integra.cl",
+    fono:      "443578167",
+    celular:   "939244136",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.807632649126056,-73.22226378605754"
+  },
+  {
+    nombre:    "El Principito",
+    comuna:    "Valdivia",
+    direccion: "Los Ñandúes #471 Pobl. La Estancia",
+    jornada:   "08:30",
+    correo:    "16.elprincipito@fundacion.integra.cl",
+    fono:      "443578168",
+    celular:   "939225335",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.848771638045235,-73.2477758706834"
+  },
+  {
+    nombre:    "Luz de los Ríos",
+    comuna:    "Valdivia",
+    direccion: "Antofagasta #755 Pobl. Norte Grande II, Sector Las Animas",
+    jornada:   "08:00",
+    correo:    "16.luzdelosrios@fundacion.integra.cl",
+    fono:      "443561625",
+    celular:   "939244153",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.806084790523975,-73.22033077826207"
+  },
+  {
+    nombre:    "Pequeña Misión de Jesús",
+    comuna:    "Valdivia",
+    direccion: "Regidor Teofilo Bernales Silva #5081 Pobl. Gral. Bernales",
+    jornada:   "08:30",
+    correo:    "16.pequenamisiondejesus@fundacion.integra.cl",
+    fono:      "442863975",
+    celular:   "939225339",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.853275602464464,-73.23143306142862"
+  },
+  {
+    nombre:    "Sala Cuna Dulce Bebé",
+    comuna:    "Valdivia",
+    direccion: "Francisco Encina #539",
+    jornada:   "08:00",
+    correo:    "16.dulcebebe@fundacion.integra.cl",
+    fono:      "442898168",
+    celular:   "939225344",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.844201811271745,-73.21486129465939"
+  },
+  {
+    nombre:    "Rinconcito Feliz",
+    comuna:    "Valdivia",
+    direccion: "Regidor Teófilo Silva, Villa Los Ediles",
+    jornada:   "08:00",
+    correo:    "16.rinconcitofeliz@fundacion.integra.cl",
+    fono:      "443578170",
+    celular:   "939225340",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.8521791164857,-73.23063825420769"
+  },
+  {
+    nombre:    "Aneley",
+    comuna:    "Valdivia",
+    direccion: "Rene Schneider #3490",
+    jornada:   "08:00",
+    correo:    "16.aneley@fundacion.integra.cl",
+    fono:      "442875091",
+    celular:   "939225325",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.84482253485546,-73.21738114843103"
+  },
+  {
+    nombre:    "Estrellita de los Ríos",
+    comuna:    "Valdivia",
+    direccion: "Los Algarrobos #180, Sector Guacamayo",
+    jornada:   "08:30",
+    correo:    "16.estrellitadelosrios@fundacion.integra.cl",
+    fono:      "442861786",
+    celular:   "939244134",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.84933717412028,-73.2538765276511"
+  },
+  {
+    nombre:    "Sueños de Colores",
+    comuna:    "Valdivia",
+    direccion: "Ruben Dario #201",
+    jornada:   "08:30",
+    correo:    "16.suenosdecolores@fundacion.integra.cl",
+    fono:      "442911037",
+    celular:   "939225341",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.83614405252419,-73.2073507494457"
+  },
+  {
+    nombre:    "Nube de Algodón",
+    comuna:    "Valdivia",
+    direccion: "Los Pumas #456, Sector Altos de Mahuiza",
+    jornada:   "08:00",
+    correo:    "16.nubedealgodon@fundacion.integra.cl",
+    fono:      "443578171",
+    celular:   "939244137",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.8478677567265,-73.24595993308479"
+  },
+  {
+    nombre:    "Sonrisas de Colores",
+    comuna:    "Valdivia",
+    direccion: "Coronel Santiago Bueras #355",
+    jornada:   "08:30",
+    correo:    "16.sonrisasdecolores@fundacion.integra.cl",
+    fono:      "442864796",
+    celular:   "939225337",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.82835055956444,-73.24760519075915"
+  },
+
+  /* ─── CORRAL ────────────────────────────────────────────── */
+  {
+    nombre:    "Naguilán",
+    comuna:    "Corral",
+    direccion: "Maipú #65",
+    jornada:   "08:30",
+    correo:    "16.naguilan@fundacion.integra.cl",
+    fono:      "632-525209",
+    celular:   "939225330",
+    tardes:    false,
+    maps:      "https://maps.google.com/?q=-39.88761804186303,-73.43172124653093"
+  },
+
+  /* ─── MÁFIL ─────────────────────────────────────────────── */
+  {
+    nombre:    "Palomitas",
+    comuna:    "Máfil",
+    direccion: "Jhon Kennedy s/n Pobl. Alabama",
+    jornada:   "08:30",
+    correo:    "16.palomitas@fundacion.integra.cl",
+    fono:      "443578155",
+    celular:   "939225336",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.6586648458884,-72.95080709194609"
+  },
+
+  /* ─── LANCO ─────────────────────────────────────────────── */
+  {
+    nombre:    "Nuevos Pasitos",
+    comuna:    "Lanco",
+    direccion: "Sor Imgard Hettich #971",
+    jornada:   "08:30",
+    correo:    "16.nuevospasitos@fundacion.integra.cl",
+    fono:      "443578149",
+    celular:   "939244139",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.4510197581369,-72.76116208342668"
+  },
+  {
+    nombre:    "Mi Mundo de Alegría",
+    comuna:    "Lanco",
+    direccion: "Cipriano Calderara #561, esquina Santiago",
+    jornada:   "08:30",
+    correo:    "16.mimundodealegria@fundacion.integra.cl",
+    fono:      "443561628",
+    celular:   "934303931",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.449801886795846,-72.76539121313094"
+  },
+  {
+    nombre:    "Alihuen",
+    comuna:    "Lanco",
+    direccion: "Centenario #299",
+    jornada:   "08:30",
+    correo:    "16.alihuen@fundacion.integra.cl",
+    fono:      "443578152",
+    celular:   "939244133",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.4495324097325,-72.77588714660271"
+  },
+
+  /* ─── LOS LAGOS ─────────────────────────────────────────── */
+  {
+    nombre:    "Girasol",
+    comuna:    "Los Lagos",
+    direccion: "Balmaceda Sur #507",
+    jornada:   "08:30",
+    correo:    "16.girasol@fundacion.integra.cl",
+    fono:      "632-525221",
+    celular:   "939225334",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.86710205055036,-72.80900593122801"
+  },
+  {
+    nombre:    "Pasitos del Futuro",
+    comuna:    "Los Lagos",
+    direccion: "Los Almendros S/N (al lado CECOF)",
+    jornada:   "08:30",
+    correo:    "16.pasitosdelfuturo@fundacion.integra.cl",
+    fono:      "443578153",
+    celular:   "939225333",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.86822392591918,-72.80491434070953"
+  },
+  {
+    nombre:    "Gotitas del Río",
+    comuna:    "Los Lagos",
+    direccion: "Balmaceda Norte #355 (cerca Muni)",
+    jornada:   "08:30",
+    correo:    "16.gotitasdelrio@fundacion.integra.cl",
+    fono:      "443578154",
+    celular:   "939244132",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.859839530145464,-72.81787053122743"
+  },
+
+  /* ─── MARIQUINA ──────────────────────────────────────────── */
+  {
+    nombre:    "San José",
+    comuna:    "Mariquina",
+    direccion: "Carlos Acharan Arce #1520",
+    jornada:   "08:30",
+    correo:    "16.sanjose@fundacion.integra.cl",
+    fono:      "443578156",
+    celular:   "939225324",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.53682143604086,-72.96242541102856"
+  },
+  {
+    nombre:    "Trinidad",
+    comuna:    "Mariquina",
+    direccion: "Mariquina #900",
+    jornada:   "08:30",
+    correo:    "16.trinidad@fundacion.integra.cl",
+    fono:      "443578157",
+    celular:   "939225326",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.539084682481224,-72.95679721069237"
+  },
+  {
+    nombre:    "Suyai",
+    comuna:    "Mariquina",
+    direccion: "Diógenes Angulo #12",
+    jornada:   "08:30",
+    correo:    "16.suyai@fundacion.integra.cl",
+    fono:      "443578158",
+    celular:   "939225321",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.538953327057726,-72.9726137373737"
+  },
+  {
+    nombre:    "Antu Kuyen",
+    comuna:    "Mariquina",
+    direccion: "Garcia Reyes #144",
+    jornada:   "08:30",
+    correo:    "16.antukuyen@fundacion.integra.cl",
+    fono:      "443578159",
+    celular:   "939244140",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.540747272289245,-72.96502701871266"
+  },
+
+  /* ─── PAILLACO ───────────────────────────────────────────── */
+  {
+    nombre:    "Paillaquito",
+    comuna:    "Paillaco",
+    direccion: "Bernardo O'Higgins #816",
+    jornada:   "08:30",
+    correo:    "16.paillaquito@fundacion.integra.cl",
+    fono:      "443561627",
+    celular:   "939225338",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-40.07079431359184,-72.8667574761479"
+  },
+  {
+    nombre:    "Eluney",
+    comuna:    "Paillaco",
+    direccion: "Manuel Rodriguez #71",
+    jornada:   "08:30",
+    correo:    "16.eluney@fundacion.integra.cl",
+    fono:      "443578161",
+    celular:   "939244141",
+    tardes:    false,
+    maps:      "https://maps.google.com/?q=-40.06939067129962,-72.87661713127963"
+  },
+  {
+    nombre:    "Violeta Parra",
+    comuna:    "Paillaco",
+    direccion: "Alonso Ercilla #588",
+    jornada:   "08:30",
+    correo:    "16.violetaparra@fundacion.integra.cl",
+    fono:      "442865835",
+    celular:   "939244142",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-40.06683452653989,-72.86989611276907"
+  },
+
+  /* ─── LA UNIÓN ───────────────────────────────────────────── */
+  {
+    nombre:    "Blanca Nieves",
+    comuna:    "La Unión",
+    direccion: "Los Tineos #55 Pobl. El Maiten",
+    jornada:   "08:30",
+    correo:    "16.blancanieves@fundacion.integra.cl",
+    fono:      "443561629",
+    celular:   "939225343",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-40.30661303157749,-73.0813732566189"
+  },
+  {
+    nombre:    "Manitos Contentas",
+    comuna:    "La Unión",
+    direccion: "Av. Prat #1775 (al lado Hospital)",
+    jornada:   "08:30",
+    correo:    "16.manitoscontentas@fundacion.integra.cl",
+    fono:      "443561605",
+    celular:   "939225332",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-40.28207097850567,-73.07528159162877"
+  },
+  {
+    nombre:    "Acogida",
+    comuna:    "La Unión",
+    direccion: "Cesar Manzano #194, Pobl. Daiber",
+    jornada:   "08:30",
+    correo:    "16.acogida@fundacion.integra.cl",
+    fono:      "443578143",
+    celular:   "939244144",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-40.30465770944795,-73.07357663875011"
+  },
+
+  /* ─── FUTRONO ────────────────────────────────────────────── */
+  {
+    nombre:    "Los Grillitos",
+    comuna:    "Futrono",
+    direccion: "Padre Leodegario S/N, Sector Los Castaños",
+    jornada:   "08:30",
+    correo:    "16.losgrillitos@fundacion.integra.cl",
+    fono:      "632-202712",
+    celular:   "939225320",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-40.12324084796682,-72.38613546774617"
+  },
+  {
+    nombre:    "Huellitas del Ranco",
+    comuna:    "Futrono",
+    direccion: "Los Carrera #12",
+    jornada:   "08:30",
+    correo:    "16.huellitasdelranco@fundacion.integra.cl",
+    fono:      "632-291307",
+    celular:   "939244149",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-40.129609782779994,-72.39088137588591"
+  },
+
+  /* ─── RÍO BUENO ──────────────────────────────────────────── */
+  {
+    nombre:    "Arco Iris",
+    comuna:    "Río Bueno",
+    direccion: "Pasaje N°14 #690 Pobl. Ejercito Libertador",
+    jornada:   "08:30",
+    correo:    "16.arcoiris@fundacion.integra.cl",
+    fono:      "443578145",
+    celular:   "939225331",
+    tardes:    false,
+    maps:      "https://maps.google.com/?q=-40.33467828241973,-72.96734996099735"
+  },
+  {
+    nombre:    "Roja Flor",
+    comuna:    "Río Bueno",
+    direccion: "Pasaje N°1 #48, Pobl. North Carolina",
+    jornada:   "08:30",
+    correo:    "16.rojaflor@fundacion.integra.cl",
+    fono:      "443578147",
+    celular:   "939225329",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-40.33641556249562,-72.94400743574617"
+  },
+  {
+    nombre:    "Pulgarcito",
+    comuna:    "Río Bueno",
+    direccion: "General Baquedano #805",
+    jornada:   "08:30",
+    correo:    "16.pulgarcito@fundacion.integra.cl",
+    fono:      "443578146",
+    celular:   "939225327",
+    tardes:    false,
+    maps:      "https://maps.google.com/?q=-40.3374953920215,-72.9408330170455"
+  },
+  {
+    nombre:    "Pintitas de Ayelen",
+    comuna:    "Río Bueno",
+    direccion: "Calle Nueva N°1 #799 (Balmaceda #799 Pobl. Pampa Rio)",
+    jornada:   "08:30",
+    correo:    "16.pintitasdeayelen@fundacion.integra.cl",
+    fono:      "443578148",
+    celular:   "939244146",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-40.33801996560681,-72.95093077713962"
+  },
+
+  /* ─── LAGO RANCO ─────────────────────────────────────────── */
+  {
+    nombre:    "Rucantú",
+    comuna:    "Lago Ranco",
+    direccion: "Antofagasta #219",
+    jornada:   "08:30",
+    correo:    "16.rucantu@fundacion.integra.cl",
+    fono:      "632-525220",
+    celular:   "939244145",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-40.322511399390784,-72.48018198801051"
+  },
+
+  /* ─── MALALHUE ───────────────────────────────────────────── */
+  {
+    nombre:    "Caminito de Luna",
+    comuna:    "Malalhue",
+    direccion: "Balmaceda #200",
+    jornada:   "08:30",
+    correo:    "16.caminitodeluna@fundacion.integra.cl",
+    fono:      "443578150",
+    celular:   "956592506",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.53981966398247,-72.50695992209207"
+  },
+
+  /* ─── PANGUIPULLI ────────────────────────────────────────── */
+  {
+    nombre:    "Fuente de Luz",
+    comuna:    "Panguipulli",
+    direccion: "Carmela Carvajal #96",
+    jornada:   "08:30",
+    correo:    "16.fuentedeluz@fundacion.integra.cl",
+    fono:      "443578162",
+    celular:   "939244143",
+    tardes:    true,
+    maps:      "https://maps.google.com/?q=-39.64536071295943,-72.34314207147095"
+  }
+
+]; /* ← FIN DE LA LISTA DE JARDINES */
+
+
+/* ============================================================
+   TOOLTIP TARDES DE JUEGO
+   ============================================================ */
+const TARDES_TIP = "Es un programa de extensión horaria de Fundación Integra que ofrece un espacio seguro, lúdico y de bienestar para niños y niñas después de la jornada normal (16:30 a 19:30 hrs). Busca brindar cuidado y actividades recreativas, siendo un apoyo para familias que trabajan, enfocado en el descanso, el juego y la protección infantil.";
+
+
+/* ============================================================
+   RENDERIZADO
+   ============================================================ */
+
+// Comunas únicas en orden
+const COMUNAS = ["Todos", ...new Set(JARDINES.map(j => j.comuna))];
+
+// Menú
+const menu = document.getElementById("topmenu");
+COMUNAS.forEach(c => {
+  const btn = document.createElement("button");
+  btn.textContent = c;
+  if (c === "Todos") btn.classList.add("active");
+  btn.onclick = () => filtrar(c, btn);
+  menu.appendChild(btn);
+});
+// Botón modo oscuro
+const modeBtn = document.createElement("button");
+modeBtn.textContent = "🌞 / 🌙";
+modeBtn.onclick = () => document.body.classList.toggle("dark");
+menu.appendChild(modeBtn);
+
+// Grilla
+const grid = document.getElementById("grid");
+JARDINES.forEach(j => {
+  const card = document.createElement("div");
+  card.className = "card";
+  card.dataset.comuna = j.comuna;
+  card.innerHTML = `
+    <h3>${j.nombre}</h3>
+    <div class="card-info">
+      <span class="lbl">Comuna:</span>     <span class="val">${j.comuna}</span>
+      <span class="lbl">Dirección:</span>  <span class="val">${j.direccion}</span>
+      <span class="lbl">Jornada:</span>    <span class="val">${j.jornada}</span>
+      <span class="lbl">Correo:</span>     <span class="val">${j.correo}</span>
+      <span class="lbl">Fono:</span>       <span class="val">${j.fono}</span>
+      <span class="lbl">Celular:</span>    <span class="val">${j.celular}</span>
+    </div>
+    <span class="badge badge-program" data-tip="${TARDES_TIP}">
+      ${j.tardes ? "Con" : "Sin"} Tardes de Juego en mi Jardín
+    </span>
+    <a class="btn" href="${j.maps}" target="_blank">📍 Ingresar a Google Maps</a>`;
+  grid.appendChild(card);
+});
+
+
+/* ============================================================
+   FILTRO DE COMUNAS
+   ============================================================ */
+function filtrar(comuna, btnActivo) {
+  document.querySelectorAll(".topmenu button").forEach(b => b.classList.remove("active"));
+  if (btnActivo) btnActivo.classList.add("active");
+
+  document.querySelectorAll(".card").forEach(card => {
+    const visible = (comuna === "Todos" || card.dataset.comuna === comuna);
+    card.style.display = visible ? "block" : "none";
+  });
+}
+
+
+/* ============================================================
+   ÍCONO INFO — ACCESIBLE
+   ============================================================ */
+(function () {
+  const icon = document.getElementById("infoIcon");
+  if (!icon) return;
+
+  const open  = () => { icon.classList.add("active");    icon.setAttribute("aria-expanded", "true"); };
+  const close = () => { icon.classList.remove("active"); icon.setAttribute("aria-expanded", "false"); };
+  const toggle = () => icon.classList.contains("active") ? close() : open();
+
+  icon.addEventListener("click",   e => { e.stopPropagation(); toggle(); });
+  icon.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+  document.addEventListener("keydown", e => { if (e.key === "Escape") close(); });
+  document.addEventListener("click",   e => { if (!icon.contains(e.target)) close(); });
+})();
+
+
+/* ============================================================
+   TEMA AUTOMÁTICO (respeta preferencia del sistema)
+   ============================================================ */
+if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+  document.body.classList.add("dark");
+}
+
+
+/* ============================================================
+   PWA — INSTALACIÓN AUTOMÁTICA
+   Detecta Android (beforeinstallprompt) o iOS (Safari)
+   ============================================================ */
+(function () {
+  const banner      = document.getElementById("pwa-banner");
+  const installBtn  = document.getElementById("pwa-install-btn");
+  const closeBtn    = document.getElementById("pwa-close-btn");
+  const iosHint     = document.getElementById("pwa-ios-hint");
+
+  // Ya fue descartado antes → no volver a mostrar
+  if (sessionStorage.getItem("pwa-dismissed")) return;
+
+  // ── Android / Chrome / Edge (prompt nativo) ─────────────
+  let deferredPrompt = null;
+
+  window.addEventListener("beforeinstallprompt", e => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Mostrar banner con pequeño retraso para no interrumpir la carga
+    setTimeout(() => banner.classList.add("show"), 2500);
+  });
+
+  installBtn.addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    banner.classList.remove("show");
+    if (outcome === "accepted") sessionStorage.setItem("pwa-dismissed", "1");
+  });
+
+  // ── iOS / Safari ─────────────────────────────────────────
+  const isIOS       = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  const isSafari    = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  const isStandalone = ("standalone" in navigator && navigator.standalone);
+
+  if (isIOS && isSafari && !isStandalone) {
+    setTimeout(() => {
+      banner.classList.add("show");
+      installBtn.textContent = "¿Cómo?";
+    }, 2500);
+
+    installBtn.addEventListener("click", () => {
+      iosHint.classList.toggle("show");
+    });
+
+    // Ocultar hint al tocar fuera
+    document.addEventListener("click", e => {
+      if (!iosHint.contains(e.target) && e.target !== installBtn) {
+        iosHint.classList.remove("show");
+      }
+    }, true);
+  }
+
+  // ── Cerrar banner ─────────────────────────────────────────
+  closeBtn.addEventListener("click", () => {
+    banner.classList.remove("show");
+    iosHint.classList.remove("show");
+    sessionStorage.setItem("pwa-dismissed", "1");
+  });
+
+  // ── Si ya está instalada no mostrar nada ──────────────────
+  window.addEventListener("appinstalled", () => {
+    banner.classList.remove("show");
+    sessionStorage.setItem("pwa-dismissed", "1");
+  });
+})();
+
+
+/* ============================================================
+   TOOLTIP FLOTANTE — "Con/Sin Tardes de Juego"
+   Usa un div fixed para no quedar atrapado en .card
+   ============================================================ */
+(function () {
+  const tip = document.getElementById("tip-box");
+
+  function show(el) {
+    tip.textContent = el.dataset.tip;
+    tip.classList.add("visible");
+    position(el);
+  }
+  function hide() {
+    tip.classList.remove("visible");
+  }
+
+  function position(el) {
+    const rect    = el.getBoundingClientRect();
+    const tipW    = 280;
+    const margin  = 8;
+    const gap     = 10;  // espacio entre badge y tooltip
+
+    // Preferencia: aparecer ARRIBA del badge
+    let top  = rect.top - tip.offsetHeight - gap;
+    let left = rect.left;
+
+    // Si no cabe arriba → aparece abajo
+    if (top < margin) top = rect.bottom + gap;
+
+    // No salirse por la derecha
+    if (left + tipW > window.innerWidth - margin) {
+      left = window.innerWidth - tipW - margin;
+    }
+    // No salirse por la izquierda
+    if (left < margin) left = margin;
+
+    tip.style.top  = top  + "px";
+    tip.style.left = left + "px";
+  }
+
+  document.querySelectorAll(".badge-program").forEach(el => {
+    // Desktop: hover
+    el.addEventListener("mouseenter", () => show(el));
+    el.addEventListener("mouseleave", hide);
+    // Móvil: tap
+    el.addEventListener("click", e => {
+      e.stopPropagation();
+      tip.classList.contains("visible") ? hide() : show(el);
+    });
+  });
+
+  // Tap fuera oculta el tooltip
+  document.addEventListener("click", hide);
+})();
+
+
+/* El banner ahora es 100% CSS — no se necesita JS para el ajuste de imagen */
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js")
+      .catch(err => console.warn("SW no registrado:", err));
+  });
+}
+
+</script>
+</body>
+</html>

@@ -97,6 +97,56 @@ body.dark .topmenu button.active      { background: var(--orange); border-color:
 }
 
 /* =============================================
+   PESTAÑAS PRINCIPALES: Jardines / Infografías
+   ============================================= */
+.tab-btn {
+  background: var(--green) !important;
+  border: 3px solid transparent !important;
+}
+body.dark .tab-btn { color: #000 !important; }
+.tab-btn.tab-active                 { background: var(--purple) !important; border-color: var(--pink) !important; }
+body.dark .tab-btn.tab-active       { background: var(--orange) !important; border-color: var(--pink) !important; color:#000 !important; }
+
+/* =============================================
+   VISTA DE INFOGRAFÍAS
+   ============================================= */
+.infografias-grid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 20px 16px 40px;
+}
+.infografia-item {
+  width: 100%;
+  max-width: 900px;
+  background: var(--card);
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0,0,0,.12);
+  overflow: hidden;
+  animation: fadeZoom .6s ease forwards;
+}
+.infografia-item img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+.infografia-item .infografia-titulo {
+  padding: 10px 16px;
+  font-weight: bold;
+  font-size: 15px;
+  color: var(--text);
+  text-align: center;
+}
+.infografias-empty {
+  text-align: center;
+  padding: 40px 16px;
+  color: var(--text);
+  opacity: .7;
+}
+
+/* =============================================
    GRILLA DE TARJETAS
    ============================================= */
 .grid {
@@ -372,6 +422,11 @@ body.dark .info-icon .tooltip { background: rgba(0,0,0,0.45); }
      ============================================= -->
 <div class="grid" id="grid"></div>
 
+<!-- =============================================
+     VISTA DE INFOGRAFÍAS (generada por JS)
+     ============================================= -->
+<div class="infografias-grid" id="infografiasGrid" style="display:none;"></div>
+
 <!-- Tooltip flotante global (no queda atrapado en .card) -->
 <div id="tip-box"></div>
 
@@ -438,6 +493,20 @@ body.dark .info-icon .tooltip { background: rgba(0,0,0,0.45); }
          tardes      → true = "Con Tardes de Juego"  /  false = "Sin Tardes de Juego"
          maps        → Enlace Google Maps (coordenadas)
    ============================================================ */
+
+/* ============================================================
+   📊 INFOGRAFÍAS
+   ✏️  Para agregar una infografía, copia una línea y cambia:
+         titulo  → Texto que aparece bajo la imagen (opcional, puede ir "")
+         archivo → Ruta del archivo dentro de la carpeta "Infografias"
+                    del repositorio (ej: "Infografias/mi-imagen.png")
+       Las imágenes deben estar subidas a la carpeta "Infografias"
+       en GitHub, en el mismo repositorio que este index.html.
+   ============================================================ */
+const INFOGRAFIAS = [
+  // { titulo: "Nombre de la infografía", archivo: "Infografias/infografia-1.png" },
+  // { titulo: "Nombre de la infografía", archivo: "Infografias/infografia-2.png" },
+];
 
 const JARDINES = [
 
@@ -980,9 +1049,25 @@ const COMUNAS = ["Todos", ...new Set(JARDINES.map(j => j.comuna))];
 
 // Menú
 const menu = document.getElementById("topmenu");
+
+// Pestañas principales: Jardines / Infografías
+const tabJardines = document.createElement("button");
+tabJardines.textContent = "🏡 Jardines";
+tabJardines.className = "tab-btn tab-active";
+tabJardines.onclick = () => mostrarVista("jardines");
+menu.appendChild(tabJardines);
+
+const tabInfografias = document.createElement("button");
+tabInfografias.textContent = "📊 Infografías";
+tabInfografias.className = "tab-btn";
+tabInfografias.onclick = () => mostrarVista("infografias");
+menu.appendChild(tabInfografias);
+
+// Botones de comuna (filtro)
 COMUNAS.forEach(c => {
   const btn = document.createElement("button");
   btn.textContent = c;
+  btn.className = "comuna-btn";
   if (c === "Todos") btn.classList.add("active");
   btn.onclick = () => filtrar(c, btn);
   menu.appendChild(btn);
@@ -992,6 +1077,46 @@ const modeBtn = document.createElement("button");
 modeBtn.textContent = "🌞 / 🌙";
 modeBtn.onclick = () => document.body.classList.toggle("dark");
 menu.appendChild(modeBtn);
+
+/* ============================================================
+   CAMBIO DE VISTA: Jardines ↔ Infografías
+   ============================================================ */
+function mostrarVista(vista) {
+  const comunaBtns   = document.querySelectorAll(".comuna-btn");
+  const grid          = document.getElementById("grid");
+  const infografiasEl = document.getElementById("infografiasGrid");
+
+  if (vista === "infografias") {
+    comunaBtns.forEach(b => b.style.display = "none");
+    grid.style.display = "none";
+    infografiasEl.style.display = "flex";
+    tabInfografias.classList.add("tab-active");
+    tabJardines.classList.remove("tab-active");
+  } else {
+    comunaBtns.forEach(b => b.style.display = "");
+    grid.style.display = "grid";
+    infografiasEl.style.display = "none";
+    tabJardines.classList.add("tab-active");
+    tabInfografias.classList.remove("tab-active");
+  }
+}
+
+// Renderizar galería de infografías
+(function renderInfografias() {
+  const cont = document.getElementById("infografiasGrid");
+  if (!INFOGRAFIAS.length) {
+    cont.innerHTML = `<div class="infografias-empty">Aún no se han agregado infografías.</div>`;
+    return;
+  }
+  INFOGRAFIAS.forEach(info => {
+    const item = document.createElement("div");
+    item.className = "infografia-item";
+    item.innerHTML = `
+      <img src="${info.archivo}" alt="${info.titulo || 'Infografía'}" loading="lazy">
+      ${info.titulo ? `<div class="infografia-titulo">${info.titulo}</div>` : ""}`;
+    cont.appendChild(item);
+  });
+})();
 
 // Grilla
 const grid = document.getElementById("grid");

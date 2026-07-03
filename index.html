@@ -54,6 +54,7 @@ body {
   width: 100%;
   overflow: hidden;
   background: #111;
+  position: relative;
 }
 
 .topbanner img {
@@ -97,50 +98,94 @@ body.dark .topmenu button.active      { background: var(--orange); border-color:
 }
 
 /* =============================================
-   BARRA DE PESTAÑAS: Jardines / Infografías
-   (Independiente de la barra de comunas)
+   PESTAÑA FLOTANTE: Jardines / Infografías / Modo
+   Widget pequeño tipo "vidrio", anclado a la
+   esquina del banner. No ocupa espacio propio en
+   el flujo del documento, así el banner nunca se
+   ve cortado.
    ============================================= */
 .tabbar {
-  display: flex;
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  z-index: 5;
+  display: inline-flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 16px 12px 6px;
+  gap: 4px;
+  padding: 5px;
+  background: rgba(15,15,20,.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 26px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.28);
 }
 .tabbar-tabs {
   display: flex;
-  gap: 10px;
-  margin: 0 auto;
+  gap: 4px;
+  position: relative;
 }
 .tab-btn {
-  background: rgba(128,128,128,.18);
-  color: var(--text);
-  border: 3px solid transparent;
-  padding: 12px 22px;
-  border-radius: 22px;
+  position: relative;
+  z-index: 1;
+  background: transparent;
+  color: #fff;
+  border: none;
+  padding: 9px 16px;
+  border-radius: 20px;
   font-weight: bold;
+  font-size: 13px;
   white-space: nowrap;
   cursor: pointer;
-  transition: .35s;
+  transition: color .3s ease;
 }
-.tab-btn:hover      { background: rgba(128,128,128,.32); }
-.tab-btn.tab-active { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+.tab-btn:hover:not(.tab-active) { color: var(--accent); }
+.tab-btn.tab-active {
+  color: #fff;
+  animation: tabPop .35s ease;
+}
+.tab-btn.tab-active::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  border-radius: 20px;
+  z-index: -1;
+  animation: tabPop .35s ease;
+}
+@keyframes tabPop {
+  from { transform: scale(.85); opacity: .4; }
+  to   { transform: scale(1);   opacity: 1;  }
+}
 
 .mode-btn {
-  background: var(--accent);
+  background: rgba(255,255,255,.12);
   color: #fff;
-  border: 3px solid transparent;
-  padding: 10px 18px;
-  border-radius: 22px;
-  font-weight: bold;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   cursor: pointer;
-  white-space: nowrap;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .3s ease;
 }
+.mode-btn:hover { background: rgba(255,255,255,.28); }
 
 @media (max-width: 600px) {
-  .tabbar        { padding: 12px 8px 4px; }
-  .tab-btn       { padding: 10px 16px; font-size: 14px; }
+  .tabbar   { left: 8px; bottom: 8px; padding: 4px; gap: 3px; }
+  .tab-btn  { padding: 7px 12px; font-size: 12px; }
+  .mode-btn { width: 32px; height: 32px; font-size: 11px; }
 }
+
+/* Transición suave al cambiar entre vistas (Jardines ↔ Infografías) */
+@keyframes viewFadeIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.view-enter { animation: viewFadeIn .45s cubic-bezier(.22,.61,.36,1); }
 
 /* =============================================
    VISTA DE INFOGRAFÍAS
@@ -445,13 +490,14 @@ body.dark .info-icon .tooltip { background: rgba(0,0,0,0.45); }
      ============================================= -->
 <div class="topbanner" id="banner">
   <img src="banner.png" alt="Banner Integra Región de Los Ríos" id="bannerImg">
-</div>
 
-<!-- =============================================
-     BARRA DE PESTAÑAS: Jardines / Infografías
-     (generada por JS, independiente del filtro de comuna)
-     ============================================= -->
-<div class="tabbar" id="tabbar"></div>
+  <!-- ===========================================
+       PESTAÑA FLOTANTE: Jardines / Infografías / Modo
+       (generada por JS, ancla sobre el banner y no
+       ocupa espacio propio en el flujo del documento)
+       =========================================== -->
+  <div class="tabbar" id="tabbar"></div>
+</div>
 
 <!-- =============================================
      MENÚ COMUNAS (generado por JS)
@@ -1138,16 +1184,25 @@ function mostrarVista(vista) {
   const grid           = document.getElementById("grid");
   const infografiasEl  = document.getElementById("infografiasGrid");
 
+  // Reinicia la animación quitando y re-agregando la clase
+  function reanimar(el) {
+    el.classList.remove("view-enter");
+    void el.offsetWidth; // fuerza reflow para poder repetir la animación
+    el.classList.add("view-enter");
+  }
+
   if (vista === "infografias") {
     topmenu.style.display = "none";
     grid.style.display = "none";
     infografiasEl.style.display = "flex";
+    reanimar(infografiasEl);
     tabInfografias.classList.add("tab-active");
     tabJardines.classList.remove("tab-active");
   } else {
     topmenu.style.display = "flex";
     grid.style.display = "grid";
     infografiasEl.style.display = "none";
+    reanimar(grid);
     tabJardines.classList.add("tab-active");
     tabInfografias.classList.remove("tab-active");
   }

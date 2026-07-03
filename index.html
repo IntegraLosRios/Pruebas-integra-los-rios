@@ -97,15 +97,50 @@ body.dark .topmenu button.active      { background: var(--orange); border-color:
 }
 
 /* =============================================
-   PESTAÑAS PRINCIPALES: Jardines / Infografías
+   BARRA DE PESTAÑAS: Jardines / Infografías
+   (Independiente de la barra de comunas)
    ============================================= */
-.tab-btn {
-  background: var(--green) !important;
-  border: 3px solid transparent !important;
+.tabbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 16px 12px 6px;
 }
-body.dark .tab-btn { color: #000 !important; }
-.tab-btn.tab-active                 { background: var(--purple) !important; border-color: var(--pink) !important; }
-body.dark .tab-btn.tab-active       { background: var(--orange) !important; border-color: var(--pink) !important; color:#000 !important; }
+.tabbar-tabs {
+  display: flex;
+  gap: 10px;
+  margin: 0 auto;
+}
+.tab-btn {
+  background: rgba(128,128,128,.18);
+  color: var(--text);
+  border: 3px solid transparent;
+  padding: 12px 22px;
+  border-radius: 22px;
+  font-weight: bold;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: .35s;
+}
+.tab-btn:hover      { background: rgba(128,128,128,.32); }
+.tab-btn.tab-active { background: var(--accent) !important; color: #fff !important; border-color: var(--accent) !important; }
+
+.mode-btn {
+  background: var(--accent);
+  color: #fff;
+  border: 3px solid transparent;
+  padding: 10px 18px;
+  border-radius: 22px;
+  font-weight: bold;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .tabbar        { padding: 12px 8px 4px; }
+  .tab-btn       { padding: 10px 16px; font-size: 14px; }
+}
 
 /* =============================================
    VISTA DE INFOGRAFÍAS
@@ -411,6 +446,12 @@ body.dark .info-icon .tooltip { background: rgba(0,0,0,0.45); }
 <div class="topbanner" id="banner">
   <img src="banner.png" alt="Banner Integra Región de Los Ríos" id="bannerImg">
 </div>
+
+<!-- =============================================
+     BARRA DE PESTAÑAS: Jardines / Infografías
+     (generada por JS, independiente del filtro de comuna)
+     ============================================= -->
+<div class="tabbar" id="tabbar"></div>
 
 <!-- =============================================
      MENÚ COMUNAS (generado por JS)
@@ -1047,53 +1088,64 @@ const TARDES_TIP = "Es un programa de extensión horaria de Fundación Integra q
 // Comunas únicas en orden
 const COMUNAS = ["Todos", ...new Set(JARDINES.map(j => j.comuna))];
 
-// Menú
-const menu = document.getElementById("topmenu");
+/* ============================================================
+   BARRA DE PESTAÑAS (Jardines / Infografías) — separada
+   de la barra de comunas
+   ============================================================ */
+const tabbar = document.getElementById("tabbar");
 
-// Pestañas principales: Jardines / Infografías
+const tabsWrap = document.createElement("div");
+tabsWrap.className = "tabbar-tabs";
+
 const tabJardines = document.createElement("button");
 tabJardines.textContent = "🏡 Jardines";
 tabJardines.className = "tab-btn tab-active";
 tabJardines.onclick = () => mostrarVista("jardines");
-menu.appendChild(tabJardines);
+tabsWrap.appendChild(tabJardines);
 
 const tabInfografias = document.createElement("button");
 tabInfografias.textContent = "📊 Infografías";
 tabInfografias.className = "tab-btn";
 tabInfografias.onclick = () => mostrarVista("infografias");
-menu.appendChild(tabInfografias);
+tabsWrap.appendChild(tabInfografias);
 
-// Botones de comuna (filtro)
+tabbar.appendChild(tabsWrap);
+
+// Botón modo oscuro (vive en la barra de pestañas, siempre visible)
+const modeBtn = document.createElement("button");
+modeBtn.textContent = "🌞 / 🌙";
+modeBtn.className = "mode-btn";
+modeBtn.onclick = () => document.body.classList.toggle("dark");
+tabbar.appendChild(modeBtn);
+
+/* ============================================================
+   MENÚ DE COMUNAS (filtro) — solo vive dentro de #topmenu
+   ============================================================ */
+const menu = document.getElementById("topmenu");
 COMUNAS.forEach(c => {
   const btn = document.createElement("button");
   btn.textContent = c;
-  btn.className = "comuna-btn";
   if (c === "Todos") btn.classList.add("active");
   btn.onclick = () => filtrar(c, btn);
   menu.appendChild(btn);
 });
-// Botón modo oscuro
-const modeBtn = document.createElement("button");
-modeBtn.textContent = "🌞 / 🌙";
-modeBtn.onclick = () => document.body.classList.toggle("dark");
-menu.appendChild(modeBtn);
 
 /* ============================================================
    CAMBIO DE VISTA: Jardines ↔ Infografías
    ============================================================ */
 function mostrarVista(vista) {
-  const comunaBtns   = document.querySelectorAll(".comuna-btn");
-  const grid          = document.getElementById("grid");
-  const infografiasEl = document.getElementById("infografiasGrid");
+  const topmenu       = document.getElementById("topmenu");
+  const grid           = document.getElementById("grid");
+  const infografiasEl  = document.getElementById("infografiasGrid");
 
   if (vista === "infografias") {
-    comunaBtns.forEach(b => b.style.display = "none");
+    topmenu.style.display = "none";
     grid.style.display = "none";
     infografiasEl.style.display = "flex";
     tabInfografias.classList.add("tab-active");
     tabJardines.classList.remove("tab-active");
   } else {
-    comunaBtns.forEach(b => b.style.display = "");
+    topmenu.style.display = "flex";
     grid.style.display = "grid";
     infografiasEl.style.display = "none";
     tabJardines.classList.add("tab-active");
@@ -1101,14 +1153,59 @@ function mostrarVista(vista) {
   }
 }
 
-// Renderizar galería de infografías
-(function renderInfografias() {
+/* ============================================================
+   INFOGRAFÍAS — lectura automática desde la carpeta "Infografias"
+   del repositorio de GitHub. Si por algún motivo no se puede
+   leer (repo privado, sin conexión, etc.) se usa como respaldo
+   la lista manual INFOGRAFIAS definida más arriba.
+   ✏️  Si tu repositorio es otro, cambia estos 3 valores:
+   ============================================================ */
+const GITHUB_OWNER  = "IntegraLosRios";
+const GITHUB_REPO   = "Pruebas-integra-los-rios";
+const GITHUB_BRANCH = "main";
+const GITHUB_FOLDER = "Infografias";
+
+function tituloDesdeArchivo(nombre) {
+  return nombre
+    .replace(/\.[^/.]+$/, "")
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+async function cargarInfografiasGitHub() {
+  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FOLDER}?ref=${GITHUB_BRANCH}`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const files = await res.json();
+    if (!Array.isArray(files)) throw new Error("Respuesta inesperada");
+    return files
+      .filter(f => f.type === "file" && /\.(png|jpe?g|webp|gif)$/i.test(f.name))
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .map(f => ({
+        titulo:  tituloDesdeArchivo(f.name),
+        archivo: f.download_url
+      }));
+  } catch (err) {
+    console.warn("Infografías: no se pudo leer la carpeta en GitHub, se usa la lista manual.", err);
+    return null;
+  }
+}
+
+async function renderInfografias() {
   const cont = document.getElementById("infografiasGrid");
-  if (!INFOGRAFIAS.length) {
+  cont.innerHTML = `<div class="infografias-empty">Cargando infografías…</div>`;
+
+  let lista = await cargarInfografiasGitHub();
+  if (!lista || !lista.length) lista = INFOGRAFIAS;
+
+  if (!lista.length) {
     cont.innerHTML = `<div class="infografias-empty">Aún no se han agregado infografías.</div>`;
     return;
   }
-  INFOGRAFIAS.forEach(info => {
+
+  cont.innerHTML = "";
+  lista.forEach(info => {
     const item = document.createElement("div");
     item.className = "infografia-item";
     item.innerHTML = `
@@ -1116,7 +1213,8 @@ function mostrarVista(vista) {
       ${info.titulo ? `<div class="infografia-titulo">${info.titulo}</div>` : ""}`;
     cont.appendChild(item);
   });
-})();
+}
+renderInfografias();
 
 // Grilla
 const grid = document.getElementById("grid");
